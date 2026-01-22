@@ -3,13 +3,14 @@ import crypto from 'crypto'
 import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
+import os from 'os';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const resizePhotos = (modelName) => async (req, res, next) => {
     if (!req.files)
         return next()
 
-    const uploadDir = path.join(__dirname, `../uploads/img/${modelName}`);
+    const uploadDir = path.join(os.tmpdir(), `uploads/img/${modelName}`);
 
     if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
@@ -17,7 +18,7 @@ export const resizePhotos = (modelName) => async (req, res, next) => {
 
     if (req.files.imageCover && Array.isArray(req.files.imageCover)) {
         const fileName = `${modelName}-${Date.now()}-cover.${path.extname(req.files.imageCover[0].originalname)}`
-        req.files.imageCover[0].path = path.join(__dirname, `../uploads/img/${modelName}`, fileName);
+        req.files.imageCover[0].path = path.join(uploadDir, fileName);
         await sharp(req.files.imageCover[0].buffer).
             // resize(2000, 1333).
             toFile(req.files.imageCover[0].path)
