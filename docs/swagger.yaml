@@ -1,0 +1,4286 @@
+# Travel Booking System API - Complete Documentation
+# 
+# This OpenAPI 3.0 specification provides comprehensive documentation for the Travel Booking System API.
+# It includes detailed request/response examples, proper data structures, and complete endpoint documentation.
+# 
+# Key Features:
+# - JWT-based authentication with role-based access control (user, admin, manager, data-entry)
+# - Complete CRUD operations for all travel-related resources
+# - File upload support for images via multipart/form-data
+# - Advanced filtering, sorting, and pagination
+# - SEO-optimized content management
+# - Comprehensive error handling and validation
+# 
+# Authentication Flow:
+# 1. POST /auth/login - Get JWT token
+# 2. Include token in Authorization header: "Bearer <token>"
+# 3. Access protected endpoints based on user role
+# 
+# Response Format:
+# All successful responses follow the format:
+# {
+#   "status": "success",
+#   "message": "Operation description",
+#   "data": { /* actual data */ },
+#   "pagination": { /* for list endpoints */ }
+# }
+
+openapi: 3.0.0
+info:
+  title: Travel Booking System API
+  description: |
+    Complete Travel Booking System API for "Zahab wa Awda" platform.
+    
+    **Features:**
+    - Multi-language support (Arabic/English)
+    - Role-based authentication system
+    - Image upload and processing
+    - SEO optimization for all content
+    - Advanced search and filtering
+    - Real-time booking management
+    
+    **Base URL:** http://192.168.1.4:3000/api/v1
+    
+    **Authentication:** JWT Bearer Token required for protected endpoints
+  version: 1.0.0
+  contact:
+    name: Zahab wa Awda API Support
+    email: support@zahabwaawda.com
+    url: https://zahabwaawda.com
+
+servers:
+  - url: http://192.168.1.4:3000/api/v1
+    description: Development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  schemas:
+    # Authentication Schemas
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@zahabwaawda.com
+          description: User's email address for authentication
+        password:
+          type: string
+          example: SecurePassword123!
+          description: User's password (minimum 6 characters)
+          minLength: 6
+      example:
+        email: admin@zahabwaawda.com
+        password: SecurePassword123!
+    
+    LoginResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+          description: Response status indicator
+        message:
+          type: string
+          example: Login successful
+          description: Success message
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzJmOGI4ZWY0ZjE2MDAyM2VkNDdmZSIsImlhdCI6MTY4NTI3NzM2OCwiZXhwIjoxNjkzMDUzMzY4fQ.xyz123
+              description: JWT authentication token
+            user:
+              $ref: '#/components/schemas/User'
+      example:
+        status: success
+        message: Login successful
+        data:
+          token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzJmOGI4ZWY0ZjE2MDAyM2VkNDdmZSIsImlhdCI6MTY4NTI3NzM2OCwiZXhwIjoxNjkzMDUzMzY4fQ.xyz123
+          user:
+            _id: 6472f8b8ef4f160023ed47fe
+            name: Admin User
+            email: admin@zahabwaawda.com
+            role: admin
+            isActive: true
+            createdAt: 2023-05-28T10:15:30.000Z
+            updatedAt: 2023-05-28T10:15:30.000Z
+    
+    ChangePasswordRequest:
+      type: object
+      required:
+        - currentPassword
+        - password
+        - passwordConfirm
+      properties:
+        currentPassword:
+          type: string
+        password:
+          type: string
+        passwordConfirm:
+          type: string
+    
+    # User Schemas
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 6472f8b8ef4f160023ed47fe
+          description: Unique user identifier
+        name:
+          type: string
+          example: أحمد محمد علي
+          description: User's full name (supports Arabic)
+        email:
+          type: string
+          format: email
+          example: ahmed.ali@zahabwaawda.com
+          description: User's email address
+        role:
+          type: string
+          enum: [user, admin, manager, data-entry]
+          example: user
+          description: User role determining access permissions
+        isActive:
+          type: boolean
+          example: true
+          description: Account activation status
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-05-28T10:15:30.000Z
+          description: Account creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-05-28T12:30:45.000Z
+          description: Last update timestamp
+      example:
+        _id: 6472f8b8ef4f160023ed47fe
+        name: أحمد محمد علي
+        email: ahmed.ali@zahabwaawda.com
+        role: user
+        isActive: true
+        createdAt: 2023-05-28T10:15:30.000Z
+        updatedAt: 2023-05-28T12:30:45.000Z
+    
+    UserCreateRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+        - passwordConfirm
+        - role
+      properties:
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: johndoe@example.com
+        password:
+          type: string
+          example: password123
+        passwordConfirm:
+          type: string
+          example: password123
+        role:
+          type: string
+          enum: [user, admin, manager, data-entry]
+          example: user
+    
+    UserUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Updated Name
+        role:
+          type: string
+          enum: [user, admin, manager, data-entry]
+        isActive:
+          type: boolean
+    
+    # SEO Schema
+    SEO:
+      type: object
+      properties:
+        metaTitle:
+          type: string
+          maxLength: 60
+          example: Best Travel Deals - Skyways Airlines
+        metaDescription:
+          type: string
+          maxLength: 160
+          example: Find the best travel deals with Skyways Airlines
+        keywords:
+          type: string
+          example: travel, flights, hotels, tours
+        slugUrl:
+          type: string
+          example: best-travel-deals
+        priority:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.8
+        changeFrequency:
+          type: string
+          enum: [always, hourly, daily, weekly, monthly, yearly, never]
+          example: monthly
+        noIndex:
+          type: boolean
+          example: false
+        noFollow:
+          type: boolean
+          example: false
+        noArchive:
+          type: boolean
+          example: false
+        noSnippet:
+          type: boolean
+          example: false
+        ogTitle:
+          type: string
+          maxLength: 60
+        ogDescription:
+          type: string
+          maxLength: 160
+        ogImage:
+          type: string
+    
+    # Airline Schemas
+    Airline:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 647abc123def456789012345
+          description: Unique airline identifier
+        name:
+          type: string
+          example: الخطوط الجوية السعودية
+          description: Airline name (supports Arabic)
+        imageCover:
+          type: string
+          example: https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/airlines/saudi-airlines-cover.jpg
+          description: Airline logo/cover image URL
+        slug:
+          type: string
+          example: saudi-airlines
+          description: URL-friendly airline identifier
+        alt:
+          type: string
+          example: شعار الخطوط الجوية السعودية
+          description: Image alt text for accessibility
+        seo:
+          $ref: '#/components/schemas/SEO'
+        createdBy:
+          type: string
+          example: 6472f8b8ef4f160023ed47fe
+          description: ID of user who created this airline
+        updatedBy:
+          type: string
+          example: 6472f8b8ef4f160023ed47fe
+          description: ID of user who last updated this airline
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-05-28T10:15:30.000Z
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-05-28T12:30:45.000Z
+          description: Last update timestamp
+      example:
+        _id: 647abc123def456789012345
+        name: الخطوط الجوية السعودية
+        imageCover: https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/airlines/saudi-airlines-cover.jpg
+        slug: saudi-airlines
+        alt: شعار الخطوط الجوية السعودية
+        seo:
+          metaTitle: الخطوط الجوية السعودية - أفضل خدمات الطيران
+          metaDescription: احجز مع الخطوط الجوية السعودية واستمتع بأفضل خدمات الطيران
+          keywords: الطيران, السعودية, حجز تذاكر, سفر
+          slugUrl: saudi-airlines
+        createdBy: 6472f8b8ef4f160023ed47fe
+        updatedBy: 6472f8b8ef4f160023ed47fe
+        createdAt: 2023-05-28T10:15:30.000Z
+        updatedAt: 2023-05-28T12:30:45.000Z
+    
+    AirlineCreateRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: Skyways Airlines
+        alt:
+          type: string
+          example: Skyways Airlines logo
+        seo:
+          $ref: '#/components/schemas/SEO'
+        imageCover:
+          type: string
+          format: binary
+    
+    # Blog Schemas
+    Blog:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+          example: أفضل الوجهات السياحية في الشرق الأوسط
+        descText:
+          type: string
+          example: اكتشف جمال وروعة الوجهات العربية
+        description:
+          type: string
+          example: دليل شامل لأجمل الوجهات السياحية في العالم العربي
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["السياحة العربية", "الشرق الأوسط", "السفر"]
+        imageCover:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        slug:
+          type: string
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    BlogCreateRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+        descText:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        imageCover:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+    
+    # Booking Schemas
+    Booking:
+      type: object
+      properties:
+        _id:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        fromCity:
+          type: string
+        toCity:
+          type: string
+        departureDate:
+          type: string
+          format: date-time
+        returnDate:
+          type: string
+          format: date-time
+        passengers:
+          type: integer
+          minimum: 1
+        slug:
+          type: string
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    BookingCreateRequest:
+      type: object
+      required:
+        - departureDate
+        - passengers
+      properties:
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        fromCity:
+          type: string
+        toCity:
+          type: string
+        departureDate:
+          type: string
+          format: date-time
+        returnDate:
+          type: string
+          format: date-time
+        passengers:
+          type: integer
+          minimum: 1
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+    
+    # Country Schemas
+    Country:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 647def123abc456789012678
+          description: Unique country identifier
+        name:
+          type: string
+          example: المملكة العربية السعودية
+          description: Country name (supports Arabic)
+        code:
+          type: string
+          example: SA
+          description: ISO country code
+        continent:
+          type: string
+          example: Asia
+          description: Continent name
+        currency:
+          type: string
+          example: SAR
+          description: Country currency code
+        language:
+          type: string
+          example: Arabic
+          description: Primary language
+        description:
+          type: string
+          example: المملكة العربية السعودية هي دولة عربية تقع في شبه الجزيرة العربية في جنوب غرب آسيا، وتعد أكبر دول الشرق الأوسط مساحة
+          description: Detailed country description
+        descText:
+          type: string
+          example: اكتشف جمال المملكة العربية السعودية مع باقاتنا السياحية المميزة
+          description: Short promotional text
+        favTime:
+          type: array
+          items:
+            type: string
+          example: ["الصباح الباكر", "المساء"]
+          description: Recommended visiting times
+        favMonth:
+          type: array
+          items:
+            type: string
+          example: ["الخريف", "الشتاء", "الربيع"]
+          description: Best months to visit
+        isActive:
+          type: boolean
+          default: true
+          example: true
+          description: Country availability status
+        images:
+          type: array
+          items:
+            type: string
+          example: 
+            - https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/countries/saudi-arabia-1.jpg
+            - https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/countries/saudi-arabia-2.jpg
+          description: Additional country images
+        imageCover:
+          type: string
+          example: https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/countries/saudi-arabia-cover.jpg
+          description: Main country cover image
+        slug:
+          type: string
+          example: saudi-arabia
+          description: URL-friendly identifier
+        alt:
+          type: string
+          example: صورة المملكة العربية السعودية
+          description: Image alt text
+        seo:
+          $ref: '#/components/schemas/SEO'
+        cities:
+          type: array
+          items:
+            $ref: '#/components/schemas/City'
+          description: List of cities in this country
+        createdBy:
+          type: string
+          example: 6472f8b8ef4f160023ed47fe
+        updatedBy:
+          type: string
+          example: 6472f8b8ef4f160023ed47fe
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-05-28T10:15:30.000Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-05-28T12:30:45.000Z
+      example:
+        _id: 647def123abc456789012678
+        name: المملكة العربية السعودية
+        code: SA
+        continent: Asia
+        currency: SAR
+        language: Arabic
+        description: المملكة العربية السعودية هي دولة عربية تقع في شبه الجزيرة العربية في جنوب غرب آسيا، وتعد أكبر دول الشرق الأوسط مساحة
+        descText: اكتشف جمال المملكة العربية السعودية مع باقاتنا السياحية المميزة
+        favTime: ["الصباح الباكر", "المساء"]
+        favMonth: ["الخريف", "الشتاء", "الربيع"]
+        isActive: true
+        images: 
+          - https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/countries/saudi-arabia-1.jpg
+          - https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/countries/saudi-arabia-2.jpg
+        imageCover: https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/countries/saudi-arabia-cover.jpg
+        slug: saudi-arabia
+        alt: صورة المملكة العربية السعودية
+        cities: []
+        createdBy: 6472f8b8ef4f160023ed47fe
+        updatedBy: 6472f8b8ef4f160023ed47fe
+        createdAt: 2023-05-28T10:15:30.000Z
+        updatedAt: 2023-05-28T12:30:45.000Z
+    
+    CountryCreateRequest:
+      type: object
+      required:
+        - name
+        - continent
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        continent:
+          type: string
+        currency:
+          type: string
+        language:
+          type: string
+        description:
+          type: string
+        descText:
+          type: string
+        favTime:
+          type: array
+          items:
+            type: string
+        favMonth:
+          type: array
+          items:
+            type: string
+        images:
+          type: array
+          items:
+            type: string
+        imageCover:
+          type: string
+          format: binary
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+    
+    # City Schemas
+    City:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+          example: Paris
+        country:
+          $ref: '#/components/schemas/Country'
+        description:
+          type: string
+        descText:
+          type: string
+        coordinates:
+          type: object
+          properties:
+            lat:
+              type: number
+              example: 48.8566
+            lng:
+              type: number
+              example: 2.3522
+        favTime:
+          type: array
+          items:
+            type: string
+        favMonth:
+          type: array
+          items:
+            type: string
+        imageCover:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        slug:
+          type: string
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    CityCreateRequest:
+      type: object
+      required:
+        - name
+        - country
+        - description
+      properties:
+        name:
+          type: string
+        country:
+          type: string
+          description: ID of the country
+        description:
+          type: string
+        descText:
+          type: string
+        coordinates:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+        favTime:
+          type: array
+          items:
+            type: string
+        favMonth:
+          type: array
+          items:
+            type: string
+        images:
+          type: array
+          items:
+            type: string
+        imageCover:
+          type: string
+          format: binary
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+    
+    # Hotel Schemas
+    Hotel:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        country:
+          $ref: '#/components/schemas/Country'
+        city:
+          $ref: '#/components/schemas/City'
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+        category:
+          type: string
+        roomNumber:
+          type: integer
+        roomType:
+          type: string
+        description:
+          type: string
+        descText:
+          type: string
+        isActive:
+          type: boolean
+          default: true
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        website:
+          type: string
+        address:
+          type: string
+        price:
+          type: object
+          properties:
+            min:
+              type: string
+            max:
+              type: string
+        imageCover:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        slug:
+          type: string
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    HotelCreateRequest:
+      type: object
+      required:
+        - name
+        - country
+        - city
+        - address
+      properties:
+        name:
+          type: string
+        country:
+          type: string
+          description: ID of the country
+        city:
+          type: string
+          description: ID of the city
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+        category:
+          type: string
+        roomNumber:
+          type: integer
+        roomType:
+          type: string
+        description:
+          type: string
+        descText:
+          type: string
+        isActive:
+          type: boolean
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        website:
+          type: string
+        address:
+          type: string
+        price:
+          type: object
+          properties:
+            min:
+              type: string
+            max:
+              type: string
+        imageCover:
+          type: string
+          format: binary
+        images:
+          type: array
+          items:
+            type: string
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+    
+    # Package Schemas
+    PackageHeader:
+      type: object
+      properties:
+        dayNumber:
+          type: number
+          minimum: 1
+        nights:
+          type: number
+          minimum: 0
+        location:
+          type: string
+          description: Country ID
+
+    PackageItinerary:
+      type: object
+      properties:
+        day:
+          type: number
+          minimum: 1
+        title:
+          type: string
+        description:
+          type: string
+
+    Package:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 647package123abc456789012680
+          description: Unique package identifier
+        name:
+          type: string
+          example: رحلة العمرة المميزة - 7 أيام
+          description: Package name (supports Arabic)
+        price:
+          type: number
+          example: 2500
+          description: Package price in local currency
+        rate:
+          type: number
+          default: 0
+          example: 4.8
+          description: Package rating (0-5 scale)
+        header:
+          $ref: '#/components/schemas/PackageHeader'
+        packageType:
+          $ref: '#/components/schemas/PackageType'
+        itinerary:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageItinerary'
+          example:
+            - day: 1
+              title: الوصول إلى مكة المكرمة
+              description: استقبال في المطار والانتقال إلى الفندق
+            - day: 2
+              title: أداء العمرة
+              description: أداء مناسك العمرة مع مرشد متخصص
+        includes:
+          type: array
+          items:
+            type: string
+          example: ["تذاكر الطيران", "الإقامة في فندق 5 نجوم", "وجبات الطعام", "النقل والمواصلات"]
+          description: Services included in the package
+        excludes:
+          type: array
+          items:
+            type: string
+          example: ["التأشيرة", "التأمين الصحي", "المصروف الشخصي"]
+          description: Services not included in the package
+        country:
+          $ref: '#/components/schemas/Country'
+        city:
+          $ref: '#/components/schemas/City'
+        imageCover:
+          type: string
+          example: https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/packages/umrah-package-cover.jpg
+          description: Main package cover image
+        images:
+          type: array
+          items:
+            type: string
+          example:
+            - https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/packages/umrah-1.jpg
+            - https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/packages/umrah-2.jpg
+          description: Additional package images
+        description:
+          type: string
+          example: رحلة العمرة المميزة تشمل الإقامة في أفضل الفنادق القريبة من الحرم مع خدمات متكاملة
+          description: Detailed package description
+        descText:
+          type: string
+          example: استمتع برحلة روحانية مميزة مع باقة العمرة الشاملة
+          description: Short promotional text
+        slug:
+          type: string
+          example: umrah-package-7-days
+          description: URL-friendly package identifier
+        alt:
+          type: string
+          example: صورة باقة العمرة المميزة
+          description: Image alt text for accessibility
+        seo:
+          $ref: '#/components/schemas/SEO'
+        createdBy:
+          type: string
+          example: 6472f8b8ef4f160023ed47fe
+          description: ID of user who created this package
+        updatedBy:
+          type: string
+          example: 6472f8b8ef4f160023ed47fe
+          description: ID of user who last updated this package
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-05-28T10:15:30.000Z
+          description: Package creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-05-28T12:30:45.000Z
+          description: Last update timestamp
+      example:
+        _id: 647package123abc456789012680
+        name: رحلة العمرة المميزة - 7 أيام
+        price: 2500
+        rate: 4.8
+        header:
+          dayNumber: 7
+          nights: 6
+          location: 647def123abc456789012678
+        packageType:
+          _id: 647type123abc456789012681
+          name: رحلات دينية
+        itinerary:
+          - day: 1
+            title: الوصول إلى مكة المكرمة
+            description: استقبال في المطار والانتقال إلى الفندق
+          - day: 2
+            title: أداء العمرة
+            description: أداء مناسك العمرة مع مرشد متخصص
+        includes: ["تذاكر الطيران", "الإقامة في فندق 5 نجوم", "وجبات الطعام"]
+        excludes: ["التأشيرة", "التأمين الصحي"]
+        country:
+          _id: 647def123abc456789012678
+          name: المملكة العربية السعودية
+        city:
+          _id: 647city123abc456789012679
+          name: مكة المكرمة
+        imageCover: https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/packages/umrah-package-cover.jpg
+        slug: umrah-package-7-days
+        createdAt: 2023-05-28T10:15:30.000Z
+        updatedAt: 2023-05-28T12:30:45.000Z
+    
+    PackageCreateRequest:
+      type: object
+      required:
+        - name
+        - price
+        - packageType
+        - country
+        - city
+        - description
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+        rate:
+          type: number
+        header:
+          $ref: '#/components/schemas/PackageHeader'
+        packageType:
+          type: string
+          description: Package type ID
+        itinerary:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageItinerary'
+        includes:
+          type: array
+          items:
+            type: string
+        excludes:
+          type: array
+          items:
+            type: string
+        country:
+          type: string
+          description: ID of the country
+        city:
+          type: string
+          description: ID of the city
+        imageCover:
+          type: string
+          format: binary
+        images:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        descText:
+          type: string
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+    
+    # Service Schemas
+    Service:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+          example: Hotel Booking Service
+        imageCover:
+          type: string
+        description:
+          type: string
+        descText:
+          type: string
+        method:
+          type: string
+          example: Online booking platform
+        summary:
+          type: string
+        slug:
+          type: string
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    ServiceCreateRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        imageCover:
+          type: string
+          format: binary
+        description:
+          type: string
+        descText:
+          type: string
+        method:
+          type: string
+        summary:
+          type: string
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+
+    # Offer Schemas
+    Offer:
+      type: object
+      properties:
+        _id:
+          type: string
+        imageCover:
+          type: string
+        offer:
+          type: number
+          minimum: 0
+          example: 25
+        name:
+          type: string
+          example: Summer Special Package
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0
+        oldPrice:
+          type: number
+          minimum: 0
+        slug:
+          type: string
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    OfferCreateRequest:
+      type: object
+      required:
+        - name
+        - offer
+        - description
+        - price
+        - oldPrice
+      properties:
+        imageCover:
+          type: string
+          format: binary
+        offer:
+          type: number
+          minimum: 0
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0
+        oldPrice:
+          type: number
+          minimum: 0
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+
+    # Package Type Schemas
+    PackageType:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+          example: Honeymoon Packages
+        imageCover:
+          type: string
+        description:
+          type: string
+        descText:
+          type: string
+        slug:
+          type: string
+        isActive:
+          type: boolean
+          default: true
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    PackageTypeCreateRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        imageCover:
+          type: string
+          format: binary
+        description:
+          type: string
+        descText:
+          type: string
+        isActive:
+          type: boolean
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+
+    # SEO Page Schemas
+    SeoPageSection:
+      type: object
+      properties:
+        title:
+          type: string
+        subtitle:
+          type: string
+        description:
+          type: array
+          items:
+            type: string
+        image:
+          type: string
+        header:
+          type: string
+        btnText:
+          type: string
+        list:
+          type: array
+          items:
+            type: string
+
+    SeoPageSections:
+      type: object
+      properties:
+        ourServices:
+          $ref: '#/components/schemas/SeoPageSection'
+        promotion:
+          $ref: '#/components/schemas/SeoPageSection'
+        ourTours:
+          $ref: '#/components/schemas/SeoPageSection'
+        ourOffers:
+          $ref: '#/components/schemas/SeoPageSection'
+        flights:
+          $ref: '#/components/schemas/SeoPageSection'
+        ourHotels:
+          $ref: '#/components/schemas/SeoPageSection'
+        tourGuide:
+          $ref: '#/components/schemas/SeoPageSection'
+        achievements:
+          $ref: '#/components/schemas/SeoPageSection'
+        stats:
+          $ref: '#/components/schemas/SeoPageSection'
+        ourGoals:
+          $ref: '#/components/schemas/SeoPageSection'
+        contactInfo:
+          $ref: '#/components/schemas/SeoPageSection'
+        contactForm:
+          $ref: '#/components/schemas/SeoPageSection'
+        content:
+          $ref: '#/components/schemas/SeoPageSection'
+
+    SeoPage:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+          example: Homepage Content
+        subtitle:
+          type: string
+        description:
+          type: string
+        descText:
+          type: string
+        sections:
+          $ref: '#/components/schemas/SeoPageSections'
+        slug:
+          type: string
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    SeoPageCreateRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+        subtitle:
+          type: string
+        description:
+          type: string
+        descText:
+          type: string
+        sections:
+          $ref: '#/components/schemas/SeoPageSections'
+        promotionImage:
+          type: string
+          format: binary
+        flightsImage:
+          type: string
+          format: binary
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+
+    # Contact Message Schemas
+    ContactMessage:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+          example: Abdelrahman Ali
+        email:
+          type: string
+          format: email
+          example: abdelrahman@example.com
+        phone:
+          type: string
+          example: +201234567890
+        message:
+          type: string
+          example: I'd like to know more about your Malaysia packages.
+        slug:
+          type: string
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    ContactMessageCreateRequest:
+      type: object
+      required:
+        - name
+        - email
+        - message
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        message:
+          type: string
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+    
+    # Tour Schemas
+    TourPath:
+      type: object
+      properties:
+        title:
+          type: string
+        duration:
+          type: string
+        description:
+          type: string
+        descText:
+          type: string
+    
+    TourHeader:
+      type: object
+      properties:
+        days:
+          type: number
+        people:
+          type: number
+        type:
+          type: string
+    
+    Tour:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+          example: Venice Canal Tour
+        description:
+          type: string
+        descText:
+          type: string
+        city:
+          $ref: '#/components/schemas/City'
+        country:
+          $ref: '#/components/schemas/Country'
+        includes:
+          type: array
+          items:
+            type: string
+          example: ["Boat ride", "Guide", "Lunch"]
+        excludes:
+          type: array
+          items:
+            type: string
+          example: ["Hotel", "Transport to Venice"]
+        header:
+          $ref: '#/components/schemas/TourHeader'
+        paths:
+          type: array
+          items:
+            $ref: '#/components/schemas/TourPath'
+        imageCover:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        slug:
+          type: string
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+        createdBy:
+          type: string
+        updatedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    
+    TourCreateRequest:
+      type: object
+      required:
+        - title
+        - city
+        - country
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        descText:
+          type: string
+        city:
+          type: string
+          description: ID of the city
+        country:
+          type: string
+          description: ID of the country
+        includes:
+          type: array
+          items:
+            type: string
+        excludes:
+          type: array
+          items:
+            type: string
+        header:
+          $ref: '#/components/schemas/TourHeader'
+        paths:
+          type: array
+          items:
+            $ref: '#/components/schemas/TourPath'
+        alt:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEO'
+    
+    # API Response Schemas
+    ApiResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+          example: success
+          description: Response status indicator
+        message:
+          type: string
+          example: Operation completed successfully
+          description: Human-readable message
+        data:
+          type: object
+          description: Response payload containing requested data
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+              example: 1
+            limit:
+              type: integer
+              example: 10
+            total:
+              type: integer
+              example: 156
+            pages:
+              type: integer
+              example: 16
+            hasNext:
+              type: boolean
+              example: true
+            hasPrev:
+              type: boolean
+              example: false
+          description: Pagination information for list endpoints
+      example:
+        status: success
+        message: Data retrieved successfully
+        data: {}
+        pagination:
+          page: 1
+          limit: 10
+          total: 156
+          pages: 16
+          hasNext: true
+          hasPrev: false
+
+    # Response Collections
+    UsersListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Users retrieved successfully
+        data:
+          type: object
+          properties:
+            users:
+              type: array
+              items:
+                $ref: '#/components/schemas/User'
+        pagination:
+          $ref: '#/components/schemas/ApiResponse/properties/pagination'
+      example:
+        status: success
+        message: Users retrieved successfully
+        data:
+          users:
+            - _id: 6472f8b8ef4f160023ed47fe
+              name: أحمد محمد علي
+              email: ahmed.ali@zahabwaawda.com
+              role: user
+              isActive: true
+              createdAt: 2023-05-28T10:15:30.000Z
+              updatedAt: 2023-05-28T12:30:45.000Z
+            - _id: 6472f8b8ef4f160023ed47ff
+              name: فاطمة أحمد
+              email: fatima.ahmed@zahabwaawda.com
+              role: manager
+              isActive: true
+              createdAt: 2023-05-28T11:20:15.000Z
+              updatedAt: 2023-05-28T11:20:15.000Z
+        pagination:
+          page: 1
+          limit: 10
+          total: 156
+          pages: 16
+          hasNext: true
+          hasPrev: false
+
+    AirlinesListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Airlines retrieved successfully
+        data:
+          type: object
+          properties:
+            airlines:
+              type: array
+              items:
+                $ref: '#/components/schemas/Airline'
+        pagination:
+          $ref: '#/components/schemas/ApiResponse/properties/pagination'
+
+    CountriesListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Countries retrieved successfully
+        data:
+          type: object
+          properties:
+            countries:
+              type: array
+              items:
+                $ref: '#/components/schemas/Country'
+        pagination:
+          $ref: '#/components/schemas/ApiResponse/properties/pagination'
+
+    CitiesListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Cities retrieved successfully
+        data:
+          type: object
+          properties:
+            cities:
+              type: array
+              items:
+                $ref: '#/components/schemas/City'
+        pagination:
+          $ref: '#/components/schemas/ApiResponse/properties/pagination'
+
+    HotelsListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Hotels retrieved successfully
+        data:
+          type: object
+          properties:
+            hotels:
+              type: array
+              items:
+                $ref: '#/components/schemas/Hotel'
+        pagination:
+          $ref: '#/components/schemas/ApiResponse/properties/pagination'
+
+    PackagesListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Packages retrieved successfully
+        data:
+          type: object
+          properties:
+            packages:
+              type: array
+              items:
+                $ref: '#/components/schemas/Package'
+        pagination:
+          $ref: '#/components/schemas/ApiResponse/properties/pagination'
+
+    BlogsListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Blogs retrieved successfully
+        data:
+          type: object
+          properties:
+            blogs:
+              type: array
+              items:
+                $ref: '#/components/schemas/Blog'
+        pagination:
+          $ref: '#/components/schemas/ApiResponse/properties/pagination'
+    
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+          description: Error status indicator
+        message:
+          type: string
+          example: Validation failed
+          description: Error message
+        error:
+          type: object
+          properties:
+            name:
+              type: string
+              example: ValidationError
+            code:
+              type: integer
+              example: 400
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    example: email
+                  message:
+                    type: string
+                    example: Valid email is required
+          description: Detailed error information
+        stack:
+          type: string
+          description: Error stack trace (development only)
+      example:
+        status: error
+        message: Validation failed
+        error:
+          name: ValidationError
+          code: 400
+          details:
+            - field: email
+              message: Valid email is required
+            - field: password
+              message: Password must be at least 6 characters
+
+  parameters:
+    IdPathParameter:
+      name: id
+      in: path
+      required: true
+      description: Resource ID
+      schema:
+        type: string
+        example: 507f1f77bcf86cd799439011
+    
+    SlugPathParameter:
+      name: slug
+      in: path
+      required: true
+      description: Resource slug
+      schema:
+        type: string
+        example: luxury-nile-tour
+    
+    PageQueryParameter:
+      name: page
+      in: query
+      required: false
+      description: Page number for pagination
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    
+    LimitQueryParameter:
+      name: limit
+      in: query
+      required: false
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+
+    SortQueryParameter:
+      name: sort
+      in: query
+      required: false
+      description: Sort field (prefix with - for descending order)
+      schema:
+        type: string
+        example: -createdAt
+
+    FieldsQueryParameter:
+      name: fields
+      in: query
+      required: false
+      description: Fields to include in response (comma-separated)
+      schema:
+        type: string
+        example: name,price,description
+
+    FilterQueryParameter:
+      name: filter
+      in: query
+      required: false  
+      description: Filter conditions (e.g., isActive=true, price[gte]=100)
+      schema:
+        type: string
+
+  responses:
+    UnauthorizedError:
+      description: Unauthorized access - Invalid or missing authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing_token:
+              summary: Missing authentication token
+              value:
+                status: error
+                message: "You are not logged in! Please log in to get access"
+                error:
+                  name: UnauthorizedError
+                  code: 401
+            invalid_token:
+              summary: Invalid or expired token
+              value:
+                status: error
+                message: "Invalid token. Please log in again"
+                error:
+                  name: JsonWebTokenError
+                  code: 401
+    
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            not_found:
+              summary: Resource not found
+              value:
+                status: error
+                message: "Resource not found"
+    
+    ValidationError:
+      description: Validation failed - Invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            validation_error:
+              summary: Field validation failed
+              value:
+                status: error
+                message: "Validation failed"
+                error:
+                  name: ValidationError
+                  code: 400
+                  details:
+                    - field: email
+                      message: Valid email is required
+                    - field: password
+                      message: Password must be at least 6 characters
+            required_fields:
+              summary: Missing required fields
+              value:
+                status: error
+                message: "Required fields are missing"
+                error:
+                  name: ValidationError
+                  code: 400
+                  details:
+                    - field: name
+                      message: Name is required
+                    - field: country
+                      message: Country is required
+
+    ForbiddenError:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            forbidden:
+              summary: Access denied
+              value:
+                status: error
+                message: "You do not have permission to perform this action"
+
+    CreatedResponse:
+      description: Resource created successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+          examples:
+            created:
+              summary: Successfully created
+              value:
+                status: success
+                message: "Resource created successfully"
+                data: {}
+
+    DeletedResponse:
+      description: Resource deleted successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: success
+              message:
+                type: string
+                example: "Resource deleted successfully"
+
+paths:
+  # Root Endpoint
+  /:
+    get:
+      tags:
+        - General
+      summary: API Root - Health Check
+      description: |
+        Root endpoint for API health check and welcome message. 
+        This endpoint can be used to verify that the API is running and accessible.
+        
+        **Success Response:**
+        ```json
+        {
+          "message": "مرحباً بك في API نظام الحجز السياحي - ذهاب وإياب",
+          "version": "1.0.0",
+          "status": "running",
+          "timestamp": "2023-05-28T10:15:30.000Z",
+          "documentation": "http://192.168.1.4:3000/api-docs"
+        }
+        ```
+      responses:
+        '200':
+          description: API is running successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: مرحباً بك في API نظام الحجز السياحي - ذهاب وإياب
+                    description: Welcome message in Arabic
+                  version:
+                    type: string
+                    example: 1.0.0
+                    description: API version
+                  status:
+                    type: string
+                    example: running
+                    description: API status
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2023-05-28T10:15:30.000Z
+                    description: Current server timestamp
+                  documentation:
+                    type: string
+                    example: http://192.168.1.4:3000/api-docs
+                    description: Link to API documentation
+              examples:
+                api_root:
+                  summary: API root response
+                  value:
+                    message: مرحباً بك في API نظام الحجز السياحي - ذهاب وإياب
+                    version: 1.0.0
+                    status: running
+                    timestamp: 2023-05-28T10:15:30.000Z
+                    documentation: http://192.168.1.4:3000/api-docs
+
+  # Authentication Endpoints
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: |
+        Authenticate user credentials and receive JWT token for API access.
+        
+        **Request Body:**
+        ```json
+        {
+          "email": "admin@zahabwaawda.com",
+          "password": "SecurePassword123!"
+        }
+        ```
+        
+        **Success Response:**
+        ```json
+        {
+          "status": "success",
+          "message": "Login successful",
+          "data": {
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "user": {
+              "_id": "6472f8b8ef4f160023ed47fe",
+              "name": "Admin User",
+              "email": "admin@zahabwaawda.com",
+              "role": "admin",
+              "isActive": true,
+              "createdAt": "2023-05-28T10:15:30.000Z",
+              "updatedAt": "2023-05-28T10:15:30.000Z"
+            }
+          }
+        }
+        ```
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              admin_login:
+                summary: Admin login
+                value:
+                  email: admin@zahabwaawda.com
+                  password: SecurePassword123!
+              user_login:
+                summary: Regular user login
+                value:
+                  email: user@zahabwaawda.com
+                  password: MyPassword123
+      responses:
+        '200':
+          description: Login successful - Returns JWT token and user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                successful_login:
+                  summary: Successful login response
+                  value:
+                    status: success
+                    message: Login successful
+                    data:
+                      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NzJmOGI4ZWY0ZjE2MDAyM2VkNDdmZSIsImlhdCI6MTY4NTI3NzM2OCwiZXhwIjoxNjkzMDUzMzY4fQ.xyz123
+                      user:
+                        _id: 6472f8b8ef4f160023ed47fe
+                        name: Admin User
+                        email: admin@zahabwaawda.com
+                        role: admin
+                        isActive: true
+                        createdAt: 2023-05-28T10:15:30.000Z
+                        updatedAt: 2023-05-28T10:15:30.000Z
+        '401':
+          description: Invalid credentials - Wrong email or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_credentials:
+                  summary: Invalid login credentials
+                  value:
+                    status: error
+                    message: Invalid email or password
+                    error:
+                      name: AuthenticationError
+                      code: 401
+        '400':
+          description: Validation error - Missing or invalid fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation_error:
+                  summary: Validation failed
+                  value:
+                    status: error
+                    message: Validation failed
+                    error:
+                      name: ValidationError
+                      code: 400
+                      details:
+                        - field: email
+                          message: Valid email is required
+                        - field: password
+                          message: Password is required
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Invalidate current user's token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user
+      description: Get profile of currently authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/changePassword:
+    patch:
+      tags:
+        - Authentication
+      summary: Change password
+      description: Change password for currently authenticated user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password changed successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '400':
+          description: Invalid current password or validation error
+
+  # Users Endpoints
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Get all users (Admin only)
+      description: |
+        Retrieve paginated list of all users in the system. Only accessible by admin users.
+        
+        **Query Parameters:**
+        - `page` (optional): Page number (default: 1)
+        - `limit` (optional): Items per page (default: 10, max: 100)
+        - `sort` (optional): Sort field, prefix with `-` for descending (e.g., `-createdAt`)
+        - `fields` (optional): Comma-separated fields to include (e.g., `name,email,role`)
+        
+        **Success Response:**
+        ```json
+        {
+          "status": "success",
+          "message": "Users retrieved successfully",
+          "data": {
+            "users": [
+              {
+                "_id": "6472f8b8ef4f160023ed47fe",
+                "name": "أحمد محمد علي",
+                "email": "ahmed.ali@zahabwaawda.com",
+                "role": "user",
+                "isActive": true,
+                "createdAt": "2023-05-28T10:15:30.000Z",
+                "updatedAt": "2023-05-28T12:30:45.000Z"
+              }
+            ]
+          },
+          "pagination": {
+            "page": 1,
+            "limit": 10,
+            "total": 156,
+            "pages": 16,
+            "hasNext": true,
+            "hasPrev": false
+          }
+        }
+        ```
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParameter'
+        - $ref: '#/components/parameters/LimitQueryParameter'
+        - $ref: '#/components/parameters/SortQueryParameter'
+        - $ref: '#/components/parameters/FieldsQueryParameter'
+      responses:
+        '200':
+          description: Users retrieved successfully with pagination
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersListResponse'
+              examples:
+                users_list:
+                  summary: List of users with pagination
+                  value:
+                    status: success
+                    message: Users retrieved successfully
+                    data:
+                      users:
+                        - _id: 6472f8b8ef4f160023ed47fe
+                          name: أحمد محمد علي
+                          email: ahmed.ali@zahabwaawda.com
+                          role: user
+                          isActive: true
+                          createdAt: 2023-05-28T10:15:30.000Z
+                          updatedAt: 2023-05-28T12:30:45.000Z
+                        - _id: 6472f8b8ef4f160023ed47ff
+                          name: فاطمة أحمد
+                          email: fatima.ahmed@zahabwaawda.com
+                          role: manager
+                          isActive: true
+                          createdAt: 2023-05-28T11:20:15.000Z
+                          updatedAt: 2023-05-28T11:20:15.000Z
+                    pagination:
+                      page: 1
+                      limit: 10
+                      total: 156
+                      pages: 16
+                      hasNext: true
+                      hasPrev: false
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Insufficient permissions
+
+    post:
+      tags:
+        - Users
+      summary: Create user (Admin only)
+      description: Create new user - requires admin role
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Insufficient permissions
+
+  /users/update-me:
+    patch:
+      tags:
+        - Users
+      summary: Update my profile
+      description: Update profile of currently authenticated user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Profile updated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /users/deactivate/{userId}:
+    post:
+      tags:
+        - Users
+      summary: Deactivate user (Admin only)
+      description: Deactivate or activate user account - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User ID to deactivate/activate
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User status updated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Insufficient permissions
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /users/admin/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user by ID (Admin only)
+      description: Get specific user by ID - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    patch:
+      tags:
+        - Users
+      summary: Update user by ID (Admin only)
+      description: Update specific user by ID - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '200':
+          description: User updated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags:
+        - Users
+      summary: Delete user (Admin only)
+      description: Delete user - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '204':
+          description: User deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  # Airlines Endpoints
+  /airLines:
+    get:
+      tags:
+        - Airlines
+      summary: Get all airlines
+      description: |
+        Retrieve list of all airlines. This is a public endpoint that doesn't require authentication.
+        
+        **Success Response:**
+        ```json
+        {
+          "status": "success",
+          "message": "Airlines retrieved successfully",
+          "data": {
+            "airlines": [
+              {
+                "_id": "647abc123def456789012345",
+                "name": "الخطوط الجوية السعودية",
+                "imageCover": "https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/airlines/saudi-airlines-cover.jpg",
+                "slug": "saudi-airlines",
+                "alt": "شعار الخطوط الجوية السعودية",
+                "seo": {
+                  "metaTitle": "الخطوط الجوية السعودية - أفضل خدمات الطيران",
+                  "metaDescription": "احجز مع الخطوط الجوية السعودية واستمتع بأفضل خدمات الطيران",
+                  "keywords": "الطيران, السعودية, حجز تذاكر, سفر"
+                },
+                "createdAt": "2023-05-28T10:15:30.000Z",
+                "updatedAt": "2023-05-28T12:30:45.000Z"
+              }
+            ]
+          },
+          "pagination": {
+            "page": 1,
+            "limit": 10,
+            "total": 25,
+            "pages": 3,
+            "hasNext": true,
+            "hasPrev": false
+          }
+        }
+        ```
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParameter'
+        - $ref: '#/components/parameters/LimitQueryParameter'
+        - $ref: '#/components/parameters/SortQueryParameter'
+      responses:
+        '200':
+          description: Airlines retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirlinesListResponse'
+              examples:
+                airlines_list:
+                  summary: List of airlines
+                  value:
+                    status: success
+                    message: Airlines retrieved successfully
+                    data:
+                      airlines:
+                        - _id: 647abc123def456789012345
+                          name: الخطوط الجوية السعودية
+                          imageCover: https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/airlines/saudi-airlines-cover.jpg
+                          slug: saudi-airlines
+                          alt: شعار الخطوط الجوية السعودية
+                          createdAt: 2023-05-28T10:15:30.000Z
+                          updatedAt: 2023-05-28T12:30:45.000Z
+                        - _id: 647abc123def456789012346
+                          name: طيران الإمارات
+                          imageCover: https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/airlines/emirates-cover.jpg
+                          slug: emirates-airline
+                          alt: شعار طيران الإمارات
+                          createdAt: 2023-05-28T11:20:15.000Z
+                          updatedAt: 2023-05-28T11:20:15.000Z
+                    pagination:
+                      page: 1
+                      limit: 10
+                      total: 25
+                      pages: 3
+                      hasNext: true
+                      hasPrev: false
+
+    post:
+      tags:
+        - Airlines
+      summary: Create airline (Admin/Manager/Data-Entry)
+      description: |
+        Create a new airline with image upload support. Requires admin, manager, or data-entry role.
+        
+        **Request Body (multipart/form-data):**
+        ```
+        name: "الخطوط الجوية القطرية"
+        alt: "شعار الخطوط الجوية القطرية"
+        imageCover: [image file]
+        seo[metaTitle]: "الخطوط الجوية القطرية - رحلات مميزة"
+        seo[metaDescription]: "احجز مع الخطوط الجوية القطرية"
+        seo[keywords]: "قطر, طيران, حجز تذاكر"
+        ```
+        
+        **Success Response:**
+        ```json
+        {
+          "status": "success",
+          "message": "Airline created successfully",
+          "data": {
+            "airline": {
+              "_id": "647abc123def456789012347",
+              "name": "الخطوط الجوية القطرية",
+              "imageCover": "https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/airlines/qatar-airlines-cover.jpg",
+              "slug": "qatar-airlines",
+              "alt": "شعار الخطوط الجوية القطرية",
+              "seo": {
+                "metaTitle": "الخطوط الجوية القطرية - رحلات مميزة",
+                "metaDescription": "احجز مع الخطوط الجوية القطرية",
+                "keywords": "قطر, طيران, حجز تذاكر"
+              },
+              "createdBy": "6472f8b8ef4f160023ed47fe",
+              "createdAt": "2023-05-28T14:30:15.000Z",
+              "updatedAt": "2023-05-28T14:30:15.000Z"
+            }
+          }
+        }
+        ```
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AirlineCreateRequest'
+            examples:
+              create_airline:
+                summary: Create airline with image
+                value:
+                  name: الخطوط الجوية القطرية
+                  alt: شعار الخطوط الجوية القطرية
+                  seo:
+                    metaTitle: الخطوط الجوية القطرية - رحلات مميزة
+                    metaDescription: احجز مع الخطوط الجوية القطرية
+                    keywords: قطر, طيران, حجز تذاكر
+      responses:
+        '201':
+          description: Airline created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                airline_created:
+                  summary: Successfully created airline
+                  value:
+                    status: success
+                    message: Airline created successfully
+                    data:
+                      airline:
+                        _id: 647abc123def456789012347
+                        name: الخطوط الجوية القطرية
+                        imageCover: https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/airlines/qatar-airlines-cover.jpg
+                        slug: qatar-airlines
+                        alt: شعار الخطوط الجوية القطرية
+                        createdBy: 6472f8b8ef4f160023ed47fe
+                        createdAt: 2023-05-28T14:30:15.000Z
+                        updatedAt: 2023-05-28T14:30:15.000Z
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /airLines/admin/{id}:
+    get:
+      tags:
+        - Airlines
+      summary: Get airline by ID (Admin)
+      description: Get specific airline by ID - requires authentication
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '200':
+          description: Airline retrieved successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    patch:
+      tags:
+        - Airlines
+      summary: Update airline (Admin/Manager)
+      description: Update specific airline - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AirlineCreateRequest'
+      responses:
+        '200':
+          description: Airline updated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Insufficient permissions
+
+    delete:
+      tags:
+        - Airlines
+      summary: Delete airline (Admin)
+      description: Delete airline - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '204':
+          description: Airline deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Insufficient permissions
+
+  # Continue with other endpoints following the same pattern...
+  # [Blogs, Bookings, Countries, Cities, Hotels, Packages, Tours, etc.]
+
+  # Example for Blogs endpoint
+  /blogs:
+    get:
+      tags:
+        - Blogs
+      summary: Get all blogs
+      description: Get list of all blogs
+      responses:
+        '200':
+          description: Blogs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      blogs:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Blog'
+
+    post:
+      tags:
+        - Blogs
+      summary: Create blog (Admin/Manager/Data-Entry)
+      description: Create new blog - requires admin, manager, or data-entry role
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlogCreateRequest'
+      responses:
+        '201':
+          description: Blog created successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /blogs/{blogSlug}:
+    get:
+      tags:
+        - Blogs
+      summary: Get blog by slug
+      description: Get specific blog by slug
+      parameters:
+        - name: blogSlug
+          in: path
+          required: true
+          description: Blog slug
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Blog retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /blogs/admin/{id}:
+    get:
+      tags:
+        - Blogs
+      summary: Get blog by ID (Admin)
+      description: Get specific blog by ID - requires authentication
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '200':
+          description: Blog retrieved successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    patch:
+      tags:
+        - Blogs
+      summary: Update blog (Admin/Manager)
+      description: Update specific blog - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BlogCreateRequest'
+      responses:
+        '200':
+          description: Blog updated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      tags:
+        - Blogs
+      summary: Delete blog (Admin)
+      description: Delete blog - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '204':
+          description: Blog deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Countries Endpoints
+  /countries:
+    get:
+      tags:
+        - Countries
+      summary: Get all countries
+      description: |
+        Retrieve list of all countries with their cities and travel information. Public endpoint.
+        
+        **Query Parameters:**
+        - `page` (optional): Page number (default: 1)
+        - `limit` (optional): Items per page (default: 10)
+        - `sort` (optional): Sort field (e.g., `name`, `-createdAt`)
+        - `isActive` (optional): Filter by active status (true/false)
+        
+        **Success Response:**
+        ```json
+        {
+          "status": "success",
+          "message": "Countries retrieved successfully",
+          "data": {
+            "countries": [
+              {
+                "_id": "647def123abc456789012678",
+                "name": "المملكة العربية السعودية",
+                "code": "SA",
+                "continent": "Asia",
+                "currency": "SAR",
+                "language": "Arabic",
+                "description": "المملكة العربية السعودية هي دولة عربية تقع في شبه الجزيرة العربية...",
+                "descText": "اكتشف جمال المملكة العربية السعودية مع باقاتنا السياحية المميزة",
+                "favTime": ["الصباح الباكر", "المساء"],
+                "favMonth": ["الخريف", "الشتاء", "الربيع"],
+                "isActive": true,
+                "imageCover": "https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/countries/saudi-arabia-cover.jpg",
+                "slug": "saudi-arabia",
+                "cities": [
+                  {
+                    "_id": "647city123abc456789012679",
+                    "name": "الرياض",
+                    "slug": "riyadh"
+                  }
+                ],
+                "createdAt": "2023-05-28T10:15:30.000Z",
+                "updatedAt": "2023-05-28T12:30:45.000Z"
+              }
+            ]
+          },
+          "pagination": {
+            "page": 1,
+            "limit": 10,
+            "total": 45,
+            "pages": 5,
+            "hasNext": true,
+            "hasPrev": false
+          }
+        }
+        ```
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParameter'
+        - $ref: '#/components/parameters/LimitQueryParameter'
+        - $ref: '#/components/parameters/SortQueryParameter'
+        - name: isActive
+          in: query
+          description: Filter by active status
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Countries retrieved successfully with cities and pagination
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountriesListResponse'
+              examples:
+                countries_list:
+                  summary: List of countries with cities
+                  value:
+                    status: success
+                    message: Countries retrieved successfully
+                    data:
+                      countries:
+                        - _id: 647def123abc456789012678
+                          name: المملكة العربية السعودية
+                          code: SA
+                          continent: Asia
+                          currency: SAR
+                          language: Arabic
+                          descText: اكتشف جمال المملكة العربية السعودية مع باقاتنا السياحية المميزة
+                          favTime: ["الصباح الباكر", "المساء"]
+                          favMonth: ["الخريف", "الشتاء", "الربيع"]
+                          isActive: true
+                          imageCover: https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/countries/saudi-arabia-cover.jpg
+                          slug: saudi-arabia
+                          cities:
+                            - _id: 647city123abc456789012679
+                              name: الرياض
+                              slug: riyadh
+                          createdAt: 2023-05-28T10:15:30.000Z
+                          updatedAt: 2023-05-28T12:30:45.000Z
+                    pagination:
+                      page: 1
+                      limit: 10
+                      total: 45
+                      pages: 5
+                      hasNext: true
+                      hasPrev: false
+
+    post:
+      tags:
+        - Countries
+      summary: Create country (Admin/Manager/Data-Entry)
+      description: Create new country - requires admin, manager, or data-entry role
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CountryCreateRequest'
+      responses:
+        '201':
+          description: Country created successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /countries/{countrySlug}:
+    get:
+      tags:
+        - Countries
+      summary: Get country by slug
+      description: Get specific country details by slug
+      parameters:
+        - name: countrySlug
+          in: path
+          required: true
+          description: Country slug
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Country retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /countries/admin/{id}:
+    get:
+      tags:
+        - Countries
+      summary: Get country by ID (Admin)
+      description: Get specific country by ID - requires authentication
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '200':
+          description: Country retrieved successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    patch:
+      tags:
+        - Countries
+      summary: Update country (Admin/Manager)
+      description: Update specific country - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CountryCreateRequest'
+      responses:
+        '200':
+          description: Country updated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      tags:
+        - Countries
+      summary: Delete country (Admin)
+      description: Delete country - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '204':
+          description: Country deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Cities Endpoints
+  /cities:
+    get:
+      tags:
+        - Cities
+      summary: Get all cities
+      description: Get list of all cities - public endpoint
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParameter'
+        - $ref: '#/components/parameters/LimitQueryParameter'
+      responses:
+        '200':
+          description: Cities retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/City'
+
+    post:
+      tags:
+        - Cities
+      summary: Create city (Admin/Manager/Data-Entry)
+      description: Create new city - requires admin, manager, or data-entry role
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CityCreateRequest'
+      responses:
+        '201':
+          description: City created successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /cities/{citySlug}:
+    get:
+      tags:
+        - Cities
+      summary: Get city by slug
+      description: Get specific city details by slug including weather and packages
+      parameters:
+        - name: citySlug
+          in: path
+          required: true
+          description: City slug
+          schema:
+            type: string
+      responses:
+        '200':
+          description: City retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /cities/admin/{id}:
+    get:
+      tags:
+        - Cities
+      summary: Get city by ID (Admin)
+      description: Get specific city by ID - requires authentication
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '200':
+          description: City retrieved successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    patch:
+      tags:
+        - Cities
+      summary: Update city (Admin/Manager)
+      description: Update specific city - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CityCreateRequest'
+      responses:
+        '200':
+          description: City updated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      tags:
+        - Cities
+      summary: Delete city (Admin)
+      description: Delete city - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '204':
+          description: City deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Hotels Endpoints
+  /hotels:
+    get:
+      tags:
+        - Hotels
+      summary: Get all hotels
+      description: Get list of all hotels - public endpoint
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParameter'
+        - $ref: '#/components/parameters/LimitQueryParameter'
+      responses:
+        '200':
+          description: Hotels retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Hotel'
+
+    post:
+      tags:
+        - Hotels
+      summary: Create hotel (Admin/Manager/Data-Entry)
+      description: Create new hotel - requires admin, manager, or data-entry role
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HotelCreateRequest'
+      responses:
+        '201':
+          description: Hotel created successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /hotels/{hotelSlug}:
+    get:
+      tags:
+        - Hotels
+      summary: Get hotel by slug
+      description: Get specific hotel details by slug
+      parameters:
+        - name: hotelSlug
+          in: path
+          required: true
+          description: Hotel slug
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Hotel retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /hotels/admin/{id}:
+    get:
+      tags:
+        - Hotels
+      summary: Get hotel by ID (Admin)
+      description: Get specific hotel by ID - requires authentication
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '200':
+          description: Hotel retrieved successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    patch:
+      tags:
+        - Hotels
+      summary: Update hotel (Admin/Manager)
+      description: Update specific hotel - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HotelCreateRequest'
+      responses:
+        '200':
+          description: Hotel updated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      tags:
+        - Hotels
+      summary: Delete hotel (Admin)
+      description: Delete hotel - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '204':
+          description: Hotel deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Packages Endpoints
+  /packages:
+    get:
+      tags:
+        - Packages
+      summary: Get all travel packages
+      description: |
+        Retrieve list of all travel packages with complete details including itinerary, pricing, and location information. Public endpoint.
+        
+        **Query Parameters:**
+        - `page` (optional): Page number (default: 1)
+        - `limit` (optional): Items per page (default: 10)
+        - `sort` (optional): Sort by price, rating, or date (e.g., `price`, `-rating`, `-createdAt`)
+        - `country` (optional): Filter by country ID
+        - `city` (optional): Filter by city ID
+        - `packageType` (optional): Filter by package type ID
+        - `price[gte]` (optional): Minimum price filter
+        - `price[lte]` (optional): Maximum price filter
+        
+        **Success Response:**
+        ```json
+        {
+          "status": "success", 
+          "message": "Packages retrieved successfully",
+          "data": {
+            "packages": [
+              {
+                "_id": "647package123abc456789012680",
+                "name": "رحلة العمرة المميزة - 7 أيام",
+                "price": 2500,
+                "rate": 4.8,
+                "header": {
+                  "dayNumber": 7,
+                  "nights": 6,
+                  "location": "647def123abc456789012678"
+                },
+                "packageType": {
+                  "_id": "647type123abc456789012681",
+                  "name": "رحلات دينية"
+                },
+                "itinerary": [
+                  {
+                    "day": 1,
+                    "title": "الوصول إلى مكة المكرمة", 
+                    "description": "استقبال في المطار والانتقال إلى الفندق"
+                  }
+                ],
+                "includes": [
+                  "تذاكر الطيران",
+                  "الإقامة في فندق 5 نجوم",
+                  "وجبات الطعام",
+                  "النقل والمواصلات"
+                ],
+                "excludes": [
+                  "التأشيرة",
+                  "التأمين الصحي"
+                ],
+                "country": {
+                  "_id": "647def123abc456789012678",
+                  "name": "المملكة العربية السعودية"
+                },
+                "city": {
+                  "_id": "647city123abc456789012679", 
+                  "name": "مكة المكرمة"
+                },
+                "imageCover": "https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/packages/umrah-package-cover.jpg",
+                "slug": "umrah-package-7-days",
+                "createdAt": "2023-05-28T10:15:30.000Z"
+              }
+            ]
+          },
+          "pagination": {
+            "page": 1,
+            "limit": 10,
+            "total": 128,
+            "pages": 13,
+            "hasNext": true,
+            "hasPrev": false
+          }
+        }
+        ```
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParameter'
+        - $ref: '#/components/parameters/LimitQueryParameter'
+        - $ref: '#/components/parameters/SortQueryParameter'
+        - name: country
+          in: query
+          description: Filter by country ID
+          schema:
+            type: string
+        - name: city
+          in: query
+          description: Filter by city ID  
+          schema:
+            type: string
+        - name: packageType
+          in: query
+          description: Filter by package type ID
+          schema:
+            type: string
+        - name: price[gte]
+          in: query
+          description: Minimum price filter
+          schema:
+            type: number
+        - name: price[lte]
+          in: query
+          description: Maximum price filter
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Packages retrieved successfully with full details and pagination
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PackagesListResponse'
+              examples:
+                packages_list:
+                  summary: List of travel packages with details
+                  value:
+                    status: success
+                    message: Packages retrieved successfully
+                    data:
+                      packages:
+                        - _id: 647package123abc456789012680
+                          name: رحلة العمرة المميزة - 7 أيام
+                          price: 2500
+                          rate: 4.8
+                          packageType:
+                            _id: 647type123abc456789012681
+                            name: رحلات دينية
+                          country:
+                            _id: 647def123abc456789012678
+                            name: المملكة العربية السعودية
+                          city:
+                            _id: 647city123abc456789012679
+                            name: مكة المكرمة
+                          imageCover: https://res.cloudinary.com/zahabwaawda/image/upload/v1684567890/packages/umrah-package-cover.jpg
+                          slug: umrah-package-7-days
+                          includes: ["تذاكر الطيران", "الإقامة في فندق 5 نجوم"]
+                          excludes: ["التأشيرة", "التأمين الصحي"]
+                          createdAt: 2023-05-28T10:15:30.000Z
+                    pagination:
+                      page: 1
+                      limit: 10
+                      total: 128
+                      pages: 13
+                      hasNext: true
+                      hasPrev: false
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Package'
+
+    post:
+      tags:
+        - Packages
+      summary: Create package (Admin/Manager/Data-Entry)
+      description: Create new travel package - requires admin, manager, or data-entry role
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PackageCreateRequest'
+      responses:
+        '201':
+          description: Package created successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /packages/admin/{id}:
+    get:
+      tags:
+        - Packages
+      summary: Get package by ID (Admin)
+      description: Get specific package by ID - requires authentication
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '200':
+          description: Package retrieved successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    patch:
+      tags:
+        - Packages
+      summary: Update package (Admin/Manager)
+      description: Update specific package - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PackageCreateRequest'
+      responses:
+        '200':
+          description: Package updated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      tags:
+        - Packages
+      summary: Delete package (Admin)
+      description: Delete package - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '204':
+          description: Package deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Package Types Endpoints
+  /packageTypes:
+    get:
+      tags:
+        - Package Types
+      summary: Get all package types
+      description: Get list of all package types - public endpoint
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParameter'
+        - $ref: '#/components/parameters/LimitQueryParameter'
+      responses:
+        '200':
+          description: Package types retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PackageType'
+
+    post:
+      tags:
+        - Package Types
+      summary: Create package type (Admin/Manager/Data-Entry)
+      description: Create new package type - requires admin, manager, or data-entry role
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PackageTypeCreateRequest'
+      responses:
+        '201':
+          description: Package type created successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /packageTypes/{packageTypeSlug}:
+    get:
+      tags:
+        - Package Types
+      summary: Get package type countries
+      description: Get countries available for specific package type
+      parameters:
+        - name: packageTypeSlug
+          in: path
+          required: true
+          description: Package type slug
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Package type countries retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /packageTypes/{packageTypeSlug}/countries/{countrySlug}:
+    get:
+      tags:
+        - Package Types
+      summary: Get country packages by type
+      description: Get packages for specific country and package type
+      parameters:
+        - name: packageTypeSlug
+          in: path
+          required: true
+          description: Package type slug
+          schema:
+            type: string
+        - name: countrySlug
+          in: path
+          required: true
+          description: Country slug
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Country packages retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /packageTypes/{packageTypeSlug}/countries/{countrySlug}/packages/{packageSlug}:
+    get:
+      tags:
+        - Package Types
+      summary: Get package details
+      description: Get specific package details by package type, country and package slug
+      parameters:
+        - name: packageTypeSlug
+          in: path
+          required: true
+          description: Package type slug
+          schema:
+            type: string
+        - name: countrySlug
+          in: path
+          required: true
+          description: Country slug
+          schema:
+            type: string
+        - name: packageSlug
+          in: path
+          required: true
+          description: Package slug
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Package details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /packageTypes/admin/{id}:
+    get:
+      tags:
+        - Package Types
+      summary: Get package type by ID (Admin)
+      description: Get specific package type by ID - requires authentication
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '200':
+          description: Package type retrieved successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    patch:
+      tags:
+        - Package Types
+      summary: Update package type (Admin/Manager)
+      description: Update specific package type - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PackageTypeCreateRequest'
+      responses:
+        '200':
+          description: Package type updated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      tags:
+        - Package Types
+      summary: Delete package type (Admin)
+      description: Delete package type - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '204':
+          description: Package type deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Tours Endpoints
+  /tours:
+    get:
+      tags:
+        - Tours
+      summary: Get all tours
+      description: Get list of all tours - public endpoint
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParameter'
+        - $ref: '#/components/parameters/LimitQueryParameter'
+      responses:
+        '200':
+          description: Tours retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Tour'
+
+    post:
+      tags:
+        - Tours
+      summary: Create tour (Admin/Manager/Data-Entry)
+      description: Create new tour - requires admin, manager, or data-entry role
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TourCreateRequest'
+      responses:
+        '201':
+          description: Tour created successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /tours/{tourSlug}:
+    get:
+      tags:
+        - Tours
+      summary: Get tour by slug
+      description: Get specific tour details by slug
+      parameters:
+        - name: tourSlug
+          in: path
+          required: true
+          description: Tour slug
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tour retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /tours/admin/{id}:
+    get:
+      tags:
+        - Tours
+      summary: Get tour by ID (Admin)
+      description: Get specific tour by ID - requires authentication
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '200':
+          description: Tour retrieved successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    patch:
+      tags:
+        - Tours
+      summary: Update tour (Admin/Manager)
+      description: Update specific tour - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TourCreateRequest'
+      responses:
+        '200':
+          description: Tour updated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      tags:
+        - Tours
+      summary: Delete tour (Admin)
+      description: Delete tour - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '204':
+          description: Tour deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Services Endpoints
+  /services:
+    get:
+      tags:
+        - Services
+      summary: Get all services
+      description: Get list of all services - public endpoint
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParameter'
+        - $ref: '#/components/parameters/LimitQueryParameter'
+      responses:
+        '200':
+          description: Services retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Service'
+
+    post:
+      tags:
+        - Services
+      summary: Create service (Admin/Manager/Data-Entry)
+      description: Create new service - requires admin, manager, or data-entry role
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ServiceCreateRequest'
+      responses:
+        '201':
+          description: Service created successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /services/admin/{id}:
+    get:
+      tags:
+        - Services
+      summary: Get service by ID (Admin)
+      description: Get specific service by ID - requires authentication
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '200':
+          description: Service retrieved successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    patch:
+      tags:
+        - Services
+      summary: Update service (Admin/Manager)
+      description: Update specific service - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ServiceCreateRequest'
+      responses:
+        '200':
+          description: Service updated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      tags:
+        - Services
+      summary: Delete service (Admin)
+      description: Delete service - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '204':
+          description: Service deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Flight Bookings Endpoints
+  /flightBookings:
+    get:
+      tags:
+        - Flight Bookings
+      summary: Get all flight bookings (Admin/Manager)
+      description: Get list of all flight bookings - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParameter'
+        - $ref: '#/components/parameters/LimitQueryParameter'
+      responses:
+        '200':
+          description: Flight bookings retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Booking'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      tags:
+        - Flight Bookings
+      summary: Create flight booking
+      description: Create new flight booking request - public endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingCreateRequest'
+      responses:
+        '201':
+          description: Flight booking created successfully
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /flightBookings/admin/{id}:
+    get:
+      tags:
+        - Flight Bookings
+      summary: Get flight booking by ID (Admin/Manager)
+      description: Get specific flight booking by ID - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '200':
+          description: Flight booking retrieved successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags:
+        - Flight Bookings
+      summary: Delete flight booking (Admin)
+      description: Delete flight booking - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '204':
+          description: Flight booking deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Offers Endpoints
+  /offers:
+    get:
+      tags:
+        - Offers
+      summary: Get all offers
+      description: Get list of all offers - public endpoint
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParameter'
+        - $ref: '#/components/parameters/LimitQueryParameter'
+      responses:
+        '200':
+          description: Offers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Offer'
+
+    post:
+      tags:
+        - Offers
+      summary: Create offer (Admin/Manager/Data-Entry)
+      description: Create new offer - requires admin, manager, or data-entry role
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OfferCreateRequest'
+      responses:
+        '201':
+          description: Offer created successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /offers/admin/{id}:
+    get:
+      tags:
+        - Offers
+      summary: Get offer by ID (Admin)
+      description: Get specific offer by ID - requires authentication
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '200':
+          description: Offer retrieved successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    patch:
+      tags:
+        - Offers
+      summary: Update offer (Admin/Manager)
+      description: Update specific offer - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OfferCreateRequest'
+      responses:
+        '200':
+          description: Offer updated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      tags:
+        - Offers
+      summary: Delete offer (Admin)
+      description: Delete offer - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '204':
+          description: Offer deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # SEO Pages Endpoints
+  /seo-pages:
+    get:
+      tags:
+        - SEO Pages
+      summary: Get all SEO pages (Admin/Manager)
+      description: Get list of all SEO pages - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParameter'
+        - $ref: '#/components/parameters/LimitQueryParameter'
+      responses:
+        '200':
+          description: SEO pages retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SeoPage'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      tags:
+        - SEO Pages
+      summary: Create SEO page (Admin/Manager/Data-Entry)
+      description: Create new SEO page - requires admin, manager, or data-entry role
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SeoPageCreateRequest'
+      responses:
+        '201':
+          description: SEO page created successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /seo-pages/{seopageSlug}:
+    get:
+      tags:
+        - SEO Pages
+      summary: Get SEO page by slug
+      description: Get specific SEO page by slug - public endpoint
+      parameters:
+        - name: seopageSlug
+          in: path
+          required: true
+          description: SEO page slug
+          schema:
+            type: string
+      responses:
+        '200':
+          description: SEO page retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /seo-pages/admin/{id}:
+    get:
+      tags:
+        - SEO Pages
+      summary: Get SEO page by ID (Admin/Manager)
+      description: Get specific SEO page by ID - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '200':
+          description: SEO page retrieved successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    patch:
+      tags:
+        - SEO Pages
+      summary: Update SEO page (Admin/Manager)
+      description: Update specific SEO page - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SeoPageCreateRequest'
+      responses:
+        '200':
+          description: SEO page updated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      tags:
+        - SEO Pages
+      summary: Delete SEO page (Admin)
+      description: Delete SEO page - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '204':
+          description: SEO page deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Contact Messages Endpoints
+  /contact:
+    get:
+      tags:
+        - Contact Messages
+      summary: Get all contact messages (Admin/Manager)
+      description: Get list of all contact messages - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageQueryParameter'
+        - $ref: '#/components/parameters/LimitQueryParameter'
+      responses:
+        '200':
+          description: Contact messages retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ContactMessage'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      tags:
+        - Contact Messages
+      summary: Create contact message
+      description: Submit new contact message - public endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactMessageCreateRequest'
+      responses:
+        '201':
+          description: Contact message submitted successfully
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /contact/admin/{id}:
+    get:
+      tags:
+        - Contact Messages
+      summary: Get contact message by ID (Admin/Manager)
+      description: Get specific contact message by ID - requires admin or manager role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '200':
+          description: Contact message retrieved successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    delete:
+      tags:
+        - Contact Messages
+      summary: Delete contact message (Admin)
+      description: Delete contact message - requires admin role
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPathParameter'
+      responses:
+        '204':
+          description: Contact message deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+tags:
+  - name: General
+    description: General API information and status endpoints
+  - name: Authentication
+    description: User authentication and authorization endpoints
+  - name: Users
+    description: User management and profile operations
+  - name: Airlines
+    description: Airlines management and operations
+  - name: Blogs
+    description: Blog posts and content management
+  - name: Countries
+    description: Countries management with geographical data
+  - name: Cities
+    description: Cities management with location details
+  - name: Hotels
+    description: Hotels listing and management
+  - name: Packages
+    description: Travel packages with itineraries and pricing
+  - name: Package Types
+    description: Package categories and type management
+  - name: Tours
+    description: Tours and guided experiences management
+  - name: Services
+    description: Company services and offerings
+  - name: Flight Bookings
+    description: Flight reservation and booking management
+  - name: Offers
+    description: Special offers and promotional deals
+  - name: SEO Pages
+    description: SEO-optimized page content management
+  - name: Contact Messages
+    description: Customer inquiries and contact form submissions

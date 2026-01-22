@@ -1,0 +1,27 @@
+import Tour from "../models/Tour.js";
+
+export const getAll = (filter) => {
+    return Tour.find(filter).populate('country', 'name').populate('city', 'name');
+}
+
+export const createOne = async (body) => {
+    return Tour.create(body)
+}
+export const getOneById = async (id ) => {
+    return Tour.findById(id)
+}
+
+export const updateOne = async (id, body ) => {
+    return await Tour.findByIdAndUpdate(id, body, {
+        new: true,
+    })
+}
+export const deleteOne = async (id ) => {
+    return await Tour.findByIdAndDelete(id)
+}
+
+
+export const getTourBySlug = async (slug) => {
+    return await Tour.findOne({ slug }).populate('country', 'name').populate('city', 'name');
+}
+

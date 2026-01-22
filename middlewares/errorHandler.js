@@ -1,0 +1,83 @@
+import { AppError } from '../utils/appError.js';
+
+
+
+
+const handleCastErrorDb = (err) => {
+    const message = `invalid ${err.path}: ${err.value}`
+    return new AppError(message, 400);
+}
+const handleDuplicateFieldsDb = (err) => {
+    const value = err.errmsg ? err.errmsg.match(/(["'])(?:(?=(\\?))\2.)*?\1/)[0] : '';
+    const message = value
+        ? `Duplicat field value ${value}, please choose another one`
+        : 'Duplicate field value, please choose another one';
+    return new AppError(message, 400)
+}
+const handleValidationErrorDb = (err) => {
+    const errors = Object.values(err).map(val => val.message)
+    const message = `Invalid input Data: ${errors.join('. ')}`;
+    return new AppError(message, 400)
+
+}
+
+
+
+const handleJwtError = () => new AppError('invalid token, please log in again', 401)
+const handleExpiredJWT = () => {
+    return new AppError('your token has expired please log in again', 401)
+}
+
+
+
+
+const sendErrorDev = (err, res) => {
+    res.status(err.statusCode);
+    res.json({
+        status: err.status,
+        message: err.message,
+        error: err,
+        stack: err.stack
+    });
+}
+const sendErrorProd = (err, res) => {
+    if (err.isOperational) { // trust the error: send the message
+        res.status(err.statusCode);
+        res.json({
+            status: err.status,
+            message: err.message,
+        });
+    } else {    // programming or unknown error: dont tell the client with the error
+        console.error(err)
+        res.status(500).json({
+            status: 'error',
+            message: 'something went very wrong'
+        })
+    }
+}
+const errorHandler = (err, req, res, next) => {
+    err.statusCode = (err.statusCode && err.statusCode !== 200) ? err.statusCode : 500;
+    err.status = err.status || 'error'
+
+    if (process.env.NODE_ENV === 'production') {
+        let error = { ...err };
+
+        if (error.name === 'JsonWebTokenError') error = handleJwtError()
+        if (error.name === 'TokenExpiredError') error = handleExpiredJWT()
+
+        if (error.name == 'CastError') error = handleCastErrorDb(error)
+        if (error.name == 'ValidationError') error = handleValidationErrorDb(error)
+        if (error.code == 11000) error = handleDuplicateFieldsDb(error)
+
+        sendErrorProd(err, res)
+    }
+
+    else if (process.env.NODE_ENV === 'development') {
+        if (err.name === 'JsonWebTokenError') err = handleJwtError()
+        if (err.name === 'TokenExpiredError') err = handleExpiredJWT()
+
+        sendErrorDev(err, res)
+    }
+};
+
+export default errorHandler;
